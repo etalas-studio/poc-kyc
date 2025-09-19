@@ -7,7 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RoomDetailsSheet } from "@/components/room-details-sheet";
 import { FilterSheet } from "@/components/filter-sheet";
-import { RoomStatus, RoomPriority, RoomOccupancy, Room, ServiceStatus } from "@/types/room";
+import {
+  RoomStatus,
+  RoomPriority,
+  RoomOccupancy,
+  Room,
+  ServiceStatus,
+} from "@/types/room";
 
 // Dummy room data for housekeeping
 const roomsToClean: Room[] = [
@@ -330,10 +336,10 @@ export default function Dashboard() {
           {filteredRooms.map((room) => (
             <Card
               key={room.id}
-              className="shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+              className="py-5 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
               onClick={() => handleRoomClick(room)}
             >
-              <CardContent className="">
+              <CardContent className="px-5">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div
@@ -357,7 +363,7 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 text-sm mb-3">
+                <div className="grid grid-cols-2 gap-3 text-sm mb-2">
                   <div>
                     <div className="text-gray-600">Guest</div>
                     <div className="font-medium">{room.guestName || "-"}</div>

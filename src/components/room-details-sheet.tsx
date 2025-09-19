@@ -8,7 +8,9 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 import { Room } from "@/types/room";
 
@@ -26,8 +28,6 @@ type ServiceStatus =
   | "In Progress"
   | null;
 
-
-
 export function RoomDetailsSheet({
   room,
   isOpen,
@@ -35,6 +35,7 @@ export function RoomDetailsSheet({
 }: RoomDetailsSheetProps) {
   const [isRoomClean, setIsRoomClean] = useState(false);
   const [serviceStatus, setServiceStatus] = useState<ServiceStatus>("Pending");
+  const [housekeepingNote, setHousekeepingNote] = useState("");
 
   if (!room) return null;
 
@@ -42,6 +43,21 @@ export function RoomDetailsSheet({
     setServiceStatus(status);
     // Here you would typically make an API call to update the service status
     console.log(`Room ${room.roomNumber} service status set to: ${status}`);
+  };
+
+  const handleSubmit = () => {
+    // Here you would typically make an API call to save the data
+    console.log(`Submitting data for room ${room.roomNumber}:`, {
+      serviceStatus,
+      housekeepingNote,
+      isRoomClean,
+    });
+
+    // Show success toast
+    toast.success(`Room ${room.roomNumber} details updated successfully!`);
+
+    // Close the sheet
+    onClose();
   };
 
   const getServiceStatusColor = (status: ServiceStatus) => {
@@ -63,7 +79,7 @@ export function RoomDetailsSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="bottom" className="h-screen max-h-none">
+      <SheetContent side="bottom" className="h-screen max-h-none flex flex-col">
         <SheetHeader>
           <SheetTitle className="text-xl">
             Room {room.roomNumber} Details
@@ -120,8 +136,6 @@ export function RoomDetailsSheet({
 
           {/* Housekeeping Actions */}
           <div className="mt-4 space-y-4">
-            {/* Mark Room as Clean */}
-
             {/* Service Status Selection */}
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-gray-700">
@@ -129,12 +143,10 @@ export function RoomDetailsSheet({
               </h4>
               <div className="grid grid-cols-2 gap-2">
                 <Button
-                  variant={
-                    serviceStatus === "Pending" ? "default" : "outline"
-                  }
+                  variant={serviceStatus === "Pending" ? "default" : "outline"}
                   onClick={() => handleServiceStatusChange("Pending")}
                   size="lg"
-                  className="text-xs"
+                  className=""
                 >
                   Pending
                 </Button>
@@ -142,7 +154,7 @@ export function RoomDetailsSheet({
                   variant={serviceStatus === "Complete" ? "default" : "outline"}
                   onClick={() => handleServiceStatusChange("Complete")}
                   size="lg"
-                  className="text-xs"
+                  className=""
                 >
                   Complete
                 </Button>
@@ -152,7 +164,7 @@ export function RoomDetailsSheet({
                   }
                   onClick={() => handleServiceStatusChange("Do not Disturb")}
                   size="lg"
-                  className="text-xs"
+                  className=""
                 >
                   Do Not Disturb
                 </Button>
@@ -162,7 +174,7 @@ export function RoomDetailsSheet({
                   }
                   onClick={() => handleServiceStatusChange("Refused Service")}
                   size="lg"
-                  className="text-xs"
+                  className=""
                 >
                   Refused Service
                 </Button>
@@ -172,13 +184,33 @@ export function RoomDetailsSheet({
                   }
                   onClick={() => handleServiceStatusChange("In Progress")}
                   size="lg"
-                  className="text-xs col-span-2"
+                  className="col-span-2"
                 >
                   In Progress
                 </Button>
               </div>
             </div>
+
+            {/* Housekeeping Note */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-700">
+                Housekeeping Notes
+              </h4>
+              <Textarea
+                placeholder="Add any housekeeping notes or observations..."
+                value={housekeepingNote}
+                onChange={(e) => setHousekeepingNote(e.target.value)}
+                className="min-h-24"
+              />
+            </div>
           </div>
+        </div>
+
+        {/* Submit Button - Sticky to bottom */}
+        <div className="p-4 border-t bg-background">
+          <Button onClick={handleSubmit} className="w-full" size="lg">
+            Submit Changes
+          </Button>
         </div>
       </SheetContent>
     </Sheet>
