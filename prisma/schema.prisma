@@ -60,3 +60,50 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+model RoomAssignment {
+  id              Int                    @id @default(autoincrement())
+  roomNumber      String                 @unique
+  status          RoomAssignmentStatus   @default(DIRTY)
+  priority        RoomAssignmentPriority @default(MEDIUM)
+  occupancy       RoomOccupancy          @default(VACANT)
+  checkoutTime    String?
+  estimatedTime   String?
+  notes           String?
+  guestCheckout   String?
+  nextCheckin     String?
+  guestName       String?
+  occupancyStatus String?
+  bedType         String?
+  serviceStatus   ServiceStatus          @default(PENDING)
+  assignedTo      String?                // User ID yang assigned
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+}
+
+enum RoomAssignmentStatus {
+  CLEAN
+  DIRTY
+  INSPECTED
+}
+
+enum RoomAssignmentPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum RoomOccupancy {
+  VACANT
+  OCCUPIED
+  OUT_OF_ORDER
+}
+
+enum ServiceStatus {
+  PENDING
+  DO_NOT_DISTURB
+  REFUSED_SERVICE
+  COMPLETE
+  IN_PROGRESS
+}

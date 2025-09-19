@@ -7,138 +7,44 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RoomDetailsSheet } from "@/components/room-details-sheet";
 import { FilterSheet } from "@/components/filter-sheet";
+import { useRoomAssignments } from "@/hooks/use-room-assignments";
 import {
   RoomStatus,
   RoomPriority,
-  RoomOccupancy,
-  Room,
-  ServiceStatus,
-  FilterOptions,
+  RoomAssignment,
+  FilterOptionsData,
+  RoomAssignmentStatus,
+  RoomAssignmentPriority,
 } from "@/types/room";
 
-// Dummy room data for housekeeping
-const roomsToClean: Room[] = [
-  {
-    id: 1,
-    roomNumber: "101",
-    status: RoomStatus.DIRTY,
-    priority: RoomPriority.HIGH,
-    occupancy: RoomOccupancy.VACANT,
-    checkoutTime: "10:00 AM",
-    estimatedTime: "45 min",
-    notes: "Stay over full clean - John Smith",
-    guestCheckout: "10:00 AM",
-    guestName: "John Smith",
-    bedType: "King",
-    serviceStatus: ServiceStatus.PENDING,
-    occupancyStatus: "Due-out",
-  },
-  {
-    id: 2,
-    roomNumber: "102",
-    status: RoomStatus.DIRTY,
-    priority: RoomPriority.URGENT,
-    occupancy: RoomOccupancy.OCCUPIED,
-    checkoutTime: "11:30 AM",
-    estimatedTime: "60 min",
-    notes: "Stay over full clean - Sarah Johnson",
-    guestCheckout: "11:30 AM",
-    guestName: "Sarah Johnson",
-    bedType: "Queen",
-    serviceStatus: ServiceStatus.IN_PROGRESS,
-    occupancyStatus: "Stay-over",
-  },
-  {
-    id: 3,
-    roomNumber: "103",
-    status: RoomStatus.DIRTY,
-    priority: RoomPriority.MEDIUM,
-    occupancy: RoomOccupancy.VACANT,
-    checkoutTime: "9:15 AM",
-    estimatedTime: "45 min",
-    notes: "Stay over full clean",
-    guestCheckout: "9:15 AM",
-    guestName: null,
-    bedType: "Double",
-    serviceStatus: ServiceStatus.PENDING,
-    occupancyStatus: "Vacant",
-  },
-  {
-    id: 4,
-    roomNumber: "201",
-    status: RoomStatus.DIRTY,
-    priority: RoomPriority.HIGH,
-    occupancy: RoomOccupancy.VACANT,
-    checkoutTime: "10:45 AM",
-    estimatedTime: "50 min",
-    notes: "Departure clean - Michael Brown",
-    guestCheckout: "10:45 AM",
-    guestName: "Michael Brown",
-    bedType: "King",
-    serviceStatus: ServiceStatus.PENDING,
-    occupancyStatus: "Due-out",
-  },
-  {
-    id: 5,
-    roomNumber: "202",
-    status: RoomStatus.INSPECTED,
-    priority: RoomPriority.LOW,
-    occupancy: RoomOccupancy.VACANT,
-    checkoutTime: "8:30 AM",
-    estimatedTime: "15 min",
-    notes: "Departure clean - Ready for guest",
-    guestCheckout: "8:30 AM",
-    guestName: null,
-    bedType: "Queen",
-    serviceStatus: ServiceStatus.COMPLETE,
-    occupancyStatus: "Ready",
-  },
-  {
-    id: 6,
-    roomNumber: "203",
-    status: RoomStatus.DIRTY,
-    priority: RoomPriority.MEDIUM,
-    occupancy: RoomOccupancy.VACANT,
-    checkoutTime: "11:00 AM",
-    estimatedTime: "45 min",
-    notes: "Departure clean - Emily Davis",
-    guestCheckout: "11:00 AM",
-    guestName: "Emily Davis",
-    bedType: "Double",
-    serviceStatus: ServiceStatus.PENDING,
-    occupancyStatus: "Due-out",
-  },
-  {
-    id: 7,
-    roomNumber: "301",
-    status: RoomStatus.DIRTY,
-    priority: RoomPriority.HIGH,
-    occupancy: RoomOccupancy.VACANT,
-    checkoutTime: "9:45 AM",
-    estimatedTime: "50 min",
-    notes: "Departure clean",
-    guestCheckout: "9:45 AM",
-    guestName: null,
-    bedType: "King",
-    serviceStatus: ServiceStatus.PENDING,
-    occupancyStatus: "Vacant",
-  },
-  {
-    id: 8,
-    roomNumber: "302",
-    status: RoomStatus.CLEAN,
-    priority: RoomPriority.LOW,
-    occupancy: RoomOccupancy.OCCUPIED,
-    checkoutTime: "10:15 AM",
-    estimatedTime: "10 min",
-    notes: "Stay over full clean - Robert Wilson",
-    guestCheckout: "10:15 AM",
-    guestName: "Robert Wilson",
-    bedType: "Queen",
-    serviceStatus: ServiceStatus.COMPLETE,
-    occupancyStatus: "Stay-over",
-  },
-];
+// Helper functions to convert enum values to display strings
+const getStatusDisplayValue = (status: RoomAssignmentStatus): string => {
+  switch (status) {
+    case "CLEAN":
+      return "clean";
+    case "DIRTY":
+      return "dirty";
+    case "INSPECTED":
+      return "inspected";
+    default:
+      return "unknown";
+  }
+};
+
+const getPriorityDisplayValue = (priority: RoomAssignmentPriority): string => {
+  switch (priority) {
+    case "LOW":
+      return "Low";
+    case "MEDIUM":
+      return "Medium";
+    case "HIGH":
+      return "High";
+    case "URGENT":
+      return "Urgent";
+    default:
+      return "Unknown";
+  }
+};
 
 const getStatusColorLine = (status: string) => {
   switch (status) {
@@ -169,18 +75,18 @@ const getStatusColor = (status: string) => {
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [selectedRoom, setSelectedRoom] = useState<
-    (typeof roomsToClean)[0] | null
-  >(null);
+  const [selectedRoom, setSelectedRoom] = useState<RoomAssignment | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
-  const [filters, setFilters] = useState<FilterOptions>({
+  const [filters, setFilters] = useState<FilterOptionsData>({
     cleanliness: [],
     sortBy: "priority",
   });
-  const [filteredRooms, setFilteredRooms] = useState(roomsToClean);
 
-  const handleRoomClick = (room: (typeof roomsToClean)[0]) => {
+  // Fetch room assignments using TanStack Query
+  const { data: roomAssignments = [], isLoading, error } = useRoomAssignments(filters);
+
+  const handleRoomClick = (room: RoomAssignment) => {
     setSelectedRoom(room);
     setIsSheetOpen(true);
   };
@@ -190,50 +96,22 @@ export default function Dashboard() {
     setSelectedRoom(null);
   };
 
-  const handleFilterApply = (newFilters: FilterOptions) => {
+  const handleFilterApply = (newFilters: FilterOptionsData) => {
     setFilters(newFilters);
-
-    // Filter rooms based on cleanliness status
-    let filtered = roomsToClean;
-    if (newFilters.cleanliness.length > 0) {
-      filtered = roomsToClean.filter((room) =>
-        newFilters.cleanliness.includes(room.status)
-      );
-    }
-
-    // Sort rooms based on selected option
-    const sorted = [...filtered].sort((a, b) => {
-      switch (newFilters.sortBy) {
-        case "priority":
-          const priorityOrder = { Urgent: 0, High: 1, Medium: 2, Low: 3 };
-          return (
-            priorityOrder[a.priority as keyof typeof priorityOrder] -
-            priorityOrder[b.priority as keyof typeof priorityOrder]
-          );
-        case "roomNumber":
-          return a.roomNumber.localeCompare(b.roomNumber);
-        case "checkoutTime":
-          return a.guestCheckout?.localeCompare(b.guestCheckout || "") || 0;
-        default:
-          return 0;
-      }
-    });
-
-    setFilteredRooms(sorted);
   };
 
   // Check if any filters are active
   const isFiltersActive = () => {
-    return filters.cleanliness.length > 0 || filters.sortBy !== "priority";
+    return (filters.cleanliness && filters.cleanliness.length > 0) || filters.sortBy !== "priority";
   };
 
   // Reset all filters to default
   const handleResetFilters = () => {
-    const defaultFilters: FilterOptions = {
+    const defaultFilters: FilterOptionsData = {
       cleanliness: [],
       sortBy: "priority",
     };
-    handleFilterApply(defaultFilters);
+    setFilters(defaultFilters);
   };
 
   useEffect(() => {
@@ -244,12 +122,7 @@ export default function Dashboard() {
     }
   }, [session, status, router]);
 
-  // Initialize filtered rooms on component mount
-  useEffect(() => {
-    handleFilterApply(filters);
-  }, [filters]);
-
-  if (status === "loading") {
+  if (status === "loading" || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -262,6 +135,17 @@ export default function Dashboard() {
 
   if (!session) {
     return null; // Will redirect to login
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600">Error loading room assignments</p>
+          <p className="text-sm text-gray-600 mt-2">{error.message}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -331,69 +215,80 @@ export default function Dashboard() {
       <div className="px-2 py-20">
         {/* Room List */}
         <div className="space-y-3">
-          {filteredRooms.map((room) => (
-            <Card
-              key={room.id}
-              className="py-5 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => handleRoomClick(room)}
-            >
-              <CardContent className="px-5">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`h-5 w-1 rounded-full text-xs font-medium ${getStatusColorLine(
-                        room.status
-                      )}`}
-                    ></div>
-                    <div className="text-lg font-semibold tracking-tight text-gray-900">
-                      Room {room.roomNumber}
+          {roomAssignments.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No room assignments found</p>
+            </div>
+          ) : (
+            roomAssignments.map((room) => {
+              const statusDisplay = getStatusDisplayValue(room.status);
+              const priorityDisplay = getPriorityDisplayValue(room.priority);
+              
+              return (
+                <Card
+                  key={room.id}
+                  className="py-5 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => handleRoomClick(room)}
+                >
+                  <CardContent className="px-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`h-5 w-1 rounded-full text-xs font-medium ${getStatusColorLine(
+                            statusDisplay
+                          )}`}
+                        ></div>
+                        <div className="text-lg font-semibold tracking-tight text-gray-900">
+                          Room {room.roomNumber}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <div
+                          className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(
+                            statusDisplay
+                          )}`}
+                        >
+                          {statusDisplay.charAt(0).toUpperCase() +
+                            statusDisplay.slice(1)}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <div
-                      className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-                        room.status
-                      )}`}
-                    >
-                      {room.status.charAt(0).toUpperCase() +
-                        room.status.slice(1)}
-                    </div>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-3 text-sm mb-2">
-                  <div>
-                    <div className="text-gray-600">Guest</div>
-                    <div className="font-medium">{room.guestName || "-"}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-600">Service Status</div>
-                    <div className="font-medium">
-                      {room.serviceStatus || "Not set"}
+                    <div className="grid grid-cols-2 gap-3 text-sm mb-2">
+                      <div>
+                        <div className="text-gray-600">Guest</div>
+                        <div className="font-medium">{room.guestName || "-"}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-600">Service Status</div>
+                        <div className="font-medium">
+                          {room.serviceStatus || "Not set"}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-gray-600">Bed Type</div>
+                        <div className="font-medium">
+                          {room.bedType || "Not specified"}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-gray-600">Priority</div>
+                        <div className="font-medium">
+                          {priorityDisplay}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <div className="text-gray-600">Bed Type</div>
-                    <div className="font-medium">
-                      {room.bedType || "Not specified"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-gray-600">Next Checkin</div>
-                    <div className="font-medium">
-                      {room.priority || "Not set"}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
         </div>
       </div>
 
       {/* Room Details Sheet */}
       <RoomDetailsSheet
-        room={selectedRoom}
+        room={selectedRoom as any} // Type compatibility for now
         isOpen={isSheetOpen}
         onClose={handleSheetClose}
       />
@@ -402,8 +297,8 @@ export default function Dashboard() {
       <FilterSheet
         isOpen={isFilterSheetOpen}
         onClose={() => setIsFilterSheetOpen(false)}
-        onApplyFilters={handleFilterApply}
-        currentFilters={filters}
+        onApplyFilters={handleFilterApply as any} // Type compatibility for now
+        currentFilters={filters as any} // Type compatibility for now
       />
     </div>
   );
