@@ -1,0 +1,21 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" rx="24" fill="#000000"/>
+  <rect x="16" y="16" width="160" height="160" rx="16" fill="#ffffff"/>
+  
+  <!-- KYC Icon Design -->
+  <g transform="translate(48, 48)">
+    <!-- User Icon -->
+    <circle cx="48" cy="36" r="16" fill="#000000"/>
+    <path d="M20 80c0-15.464 12.536-28 28-28s28 12.536 28 28v16H20V80z" fill="#000000"/>
+    
+    <!-- Document/ID Card -->
+    <rect x="8" y="64" width="80" height="48" rx="4" fill="none" stroke="#000000" stroke-width="2"/>
+    <line x1="16" y1="76" x2="56" y2="76" stroke="#000000" stroke-width="2"/>
+    <line x1="16" y1="84" x2="48" y2="84" stroke="#000000" stroke-width="2"/>
+    <line x1="16" y1="92" x2="40" y2="92" stroke="#000000" stroke-width="2"/>
+    
+    <!-- Checkmark -->
+    <circle cx="72" cy="88" r="12" fill="#22c55e"/>
+    <path d="M68 88l3 3 6-6" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

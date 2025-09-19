@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
-import { Room } from "@/types/room";
+import { Room, ServiceStatus } from "@/types/room";
 
 interface RoomDetailsSheetProps {
   room: Room | null;
@@ -20,21 +20,13 @@ interface RoomDetailsSheetProps {
   onClose: () => void;
 }
 
-type ServiceStatus =
-  | "Pending"
-  | "Do not Disturb"
-  | "Refused Service"
-  | "Complete"
-  | "In Progress"
-  | null;
-
 export function RoomDetailsSheet({
   room,
   isOpen,
   onClose,
 }: RoomDetailsSheetProps) {
   const [isRoomClean, setIsRoomClean] = useState(false);
-  const [serviceStatus, setServiceStatus] = useState<ServiceStatus>("Pending");
+  const [serviceStatus, setServiceStatus] = useState<ServiceStatus>(ServiceStatus.PENDING);
   const [housekeepingNote, setHousekeepingNote] = useState("");
 
   if (!room) return null;
@@ -143,16 +135,16 @@ export function RoomDetailsSheet({
               </h4>
               <div className="grid grid-cols-2 gap-2">
                 <Button
-                  variant={serviceStatus === "Pending" ? "default" : "outline"}
-                  onClick={() => handleServiceStatusChange("Pending")}
+                  variant={serviceStatus === ServiceStatus.PENDING ? "default" : "outline"}
+                  onClick={() => handleServiceStatusChange(ServiceStatus.PENDING)}
                   size="lg"
                   className=""
                 >
                   Pending
                 </Button>
                 <Button
-                  variant={serviceStatus === "Complete" ? "default" : "outline"}
-                  onClick={() => handleServiceStatusChange("Complete")}
+                  variant={serviceStatus === ServiceStatus.COMPLETE ? "default" : "outline"}
+                  onClick={() => handleServiceStatusChange(ServiceStatus.COMPLETE)}
                   size="lg"
                   className=""
                 >
@@ -160,9 +152,9 @@ export function RoomDetailsSheet({
                 </Button>
                 <Button
                   variant={
-                    serviceStatus === "Do not Disturb" ? "default" : "outline"
+                    serviceStatus === ServiceStatus.DO_NOT_DISTURB ? "default" : "outline"
                   }
-                  onClick={() => handleServiceStatusChange("Do not Disturb")}
+                  onClick={() => handleServiceStatusChange(ServiceStatus.DO_NOT_DISTURB)}
                   size="lg"
                   className=""
                 >
@@ -170,9 +162,9 @@ export function RoomDetailsSheet({
                 </Button>
                 <Button
                   variant={
-                    serviceStatus === "Refused Service" ? "default" : "outline"
+                    serviceStatus === ServiceStatus.REFUSED_SERVICE ? "default" : "outline"
                   }
-                  onClick={() => handleServiceStatusChange("Refused Service")}
+                  onClick={() => handleServiceStatusChange(ServiceStatus.REFUSED_SERVICE)}
                   size="lg"
                   className=""
                 >
@@ -180,9 +172,9 @@ export function RoomDetailsSheet({
                 </Button>
                 <Button
                   variant={
-                    serviceStatus === "In Progress" ? "default" : "outline"
+                    serviceStatus === ServiceStatus.IN_PROGRESS ? "default" : "outline"
                   }
-                  onClick={() => handleServiceStatusChange("In Progress")}
+                  onClick={() => handleServiceStatusChange(ServiceStatus.IN_PROGRESS)}
                   size="lg"
                   className="col-span-2"
                 >

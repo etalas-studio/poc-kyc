@@ -13,6 +13,7 @@ import {
   RoomOccupancy,
   Room,
   ServiceStatus,
+  FilterOptions,
 } from "@/types/room";
 
 // Dummy room data for housekeeping
@@ -173,9 +174,9 @@ export default function Dashboard() {
   >(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
-  const [filters, setFilters] = useState({
-    cleanliness: [] as string[],
-    sortBy: "priority" as string,
+  const [filters, setFilters] = useState<FilterOptions>({
+    cleanliness: [],
+    sortBy: "priority",
   });
   const [filteredRooms, setFilteredRooms] = useState(roomsToClean);
 
@@ -189,10 +190,7 @@ export default function Dashboard() {
     setSelectedRoom(null);
   };
 
-  const handleFilterApply = (newFilters: {
-    cleanliness: string[];
-    sortBy: string;
-  }) => {
+  const handleFilterApply = (newFilters: FilterOptions) => {
     setFilters(newFilters);
 
     // Filter rooms based on cleanliness status
@@ -207,7 +205,7 @@ export default function Dashboard() {
     const sorted = [...filtered].sort((a, b) => {
       switch (newFilters.sortBy) {
         case "priority":
-          const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
+          const priorityOrder = { Urgent: 0, High: 1, Medium: 2, Low: 3 };
           return (
             priorityOrder[a.priority as keyof typeof priorityOrder] -
             priorityOrder[b.priority as keyof typeof priorityOrder]
@@ -231,9 +229,9 @@ export default function Dashboard() {
 
   // Reset all filters to default
   const handleResetFilters = () => {
-    const defaultFilters = {
-      cleanliness: [] as string[],
-      sortBy: "priority" as string,
+    const defaultFilters: FilterOptions = {
+      cleanliness: [],
+      sortBy: "priority",
     };
     handleFilterApply(defaultFilters);
   };
@@ -249,7 +247,7 @@ export default function Dashboard() {
   // Initialize filtered rooms on component mount
   useEffect(() => {
     handleFilterApply(filters);
-  }, []);
+  }, [filters]);
 
   if (status === "loading") {
     return (

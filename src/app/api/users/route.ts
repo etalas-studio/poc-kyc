@@ -1,36 +1,45 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 export async function GET() {
   const users = await prisma.user.findMany({
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
   });
   return NextResponse.json(users);
 }
 
 export async function POST(request: Request) {
-  const body = (await request.json().catch(() => null)) as
-    | { email?: string; name?: string }
-    | null;
+  const body = (await request.json().catch(() => null)) as {
+    email?: string;
+    name?: string;
+    password?: string;
+  } | null;
 
-  if (!body?.email) {
+  if (!body?.email || !body?.password) {
     return NextResponse.json(
-      { error: 'Missing required email field.' },
+      { error: "Missing required email and password fields." },
       { status: 400 }
     );
   }
 
   try {
+    const hashedPassword = await bcrypt.hash(body.password, 12);
+    
     const user = await prisma.user.create({
       data: {
         email: body.email,
         name: body.name ?? null,
+        password: hashedPassword,
       },
     });
-    return NextResponse.json(user, { status: 201 });
+    
+    // Don't return the password in the response
+    const { password, ...userWithoutPassword } = user;
+    return NextResponse.json(userWithoutPassword, { status: 201 });
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : 'Unable to create user';
+      error instanceof Error ? error.message : "Unable to create user";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -1,0 +1,75 @@
+{
+  "name": "KYC PWA Application",
+  "short_name": "KYC PWA",
+  "description": "Progressive Web App untuk proses KYC (Know Your Customer)",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "id",
+  "categories": ["business", "finance"],
+  "icons": [
+    {
+      "src": "/icon-192x192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icon-512x512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/apple-touch-icon.svg",
+      "sizes": "180x180",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshot-narrow.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Akses langsung ke dashboard",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/icon-192x192.svg",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Login",
+      "short_name": "Login",
+      "description": "Halaman login",
+      "url": "/login",
+      "icons": [
+        {
+          "src": "/icon-192x192.svg",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

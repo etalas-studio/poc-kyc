@@ -1,4 +1,4 @@
-import { withAuth } from "next-auth/middleware"
+import { withAuth } from "next-auth/middleware";
 
 export default withAuth(
   function middleware(req) {
@@ -9,14 +9,14 @@ export default withAuth(
       authorized: ({ token, req }) => {
         // Protect dashboard routes
         if (req.nextUrl.pathname.startsWith("/dashboard")) {
-          return !!token
+          return !!token;
         }
-        return true
+        return true;
       },
     },
   }
-)
+);
 
 export const config = {
-  matcher: ["/dashboard/:path*"]
-}
+  matcher: ["/dashboard/:path*"],
+};
