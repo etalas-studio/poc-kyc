@@ -91,44 +91,50 @@ export default function Dashboard() {
   });
 
   // Fetch room assignments using TanStack Query
-  const {
-    data: roomAssignments = [],
-    isLoading,
-    error,
-  } = useRoomAssignments();
+  const { data: roomAssignments = [], isLoading, error } = useRoomAssignments();
 
   // Deduplicate room assignments based on room ID and updated timestamp
   const deduplicatedRooms = useMemo(() => {
     if (!roomAssignments || roomAssignments.length === 0) return [];
-    
-    console.log('🔄 Dashboard: Deduplicating rooms, input count:', roomAssignments.length);
-    
+
+    console.log(
+      "🔄 Dashboard: Deduplicating rooms, input count:",
+      roomAssignments.length
+    );
+
     const roomMap = new Map<number, RoomAssignment>(); // Fixed: Use number for room ID
-    
+
     roomAssignments.forEach((room) => {
       const existingRoom = roomMap.get(room.id); // Now using number directly
-      
+
       if (!existingRoom) {
         roomMap.set(room.id, room);
       } else {
         // Keep the room with the most recent updatedAt timestamp
         const existingTime = new Date(existingRoom.updatedAt).getTime();
         const currentTime = new Date(room.updatedAt).getTime();
-        
-        console.log(`🔄 Dashboard: Duplicate room ${room.id} found. Existing: ${existingTime}, Current: ${currentTime}`);
-        
+
+        console.log(
+          `🔄 Dashboard: Duplicate room ${room.id} found. Existing: ${existingTime}, Current: ${currentTime}`
+        );
+
         if (currentTime > existingTime) {
           console.log(`✅ Dashboard: Keeping newer version of room ${room.id}`);
           roomMap.set(room.id, room);
         } else {
-          console.log(`⚠️ Dashboard: Keeping existing version of room ${room.id}`);
+          console.log(
+            `⚠️ Dashboard: Keeping existing version of room ${room.id}`
+          );
         }
       }
     });
-    
+
     const result = Array.from(roomMap.values());
-    console.log('✅ Dashboard: Deduplication complete, output count:', result.length);
-    
+    console.log(
+      "✅ Dashboard: Deduplication complete, output count:",
+      result.length
+    );
+
     return result;
   }, [roomAssignments]);
 
@@ -198,12 +204,10 @@ export default function Dashboard() {
         <div className="px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <h1 className="text-xl font-semibold text-gray-900">
-                Room Assignments
-              </h1>
+              <h1 className="font-semibold text-gray-900">Room Assignments</h1>
               <OfflineIndicator />
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="relative">
                 <Button

@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Wifi, WifiOff, RefreshCw, AlertCircle, CheckCircle } from "lucide-react";
+import {
+  Wifi,
+  WifiOff,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { offlineManager } from "@/lib/offline/offline-manager";
 import { backgroundSyncService } from "@/lib/offline/background-sync";
@@ -11,9 +17,14 @@ interface OfflineIndicatorProps {
   showText?: boolean;
 }
 
-export function OfflineIndicator({ className, showText = true }: OfflineIndicatorProps) {
+export function OfflineIndicator({
+  className,
+  showText = true,
+}: OfflineIndicatorProps) {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'error'>('idle');
+  const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "error">(
+    "idle"
+  );
   const [pendingSyncCount, setPendingSyncCount] = useState(0);
 
   useEffect(() => {
@@ -21,15 +32,15 @@ export function OfflineIndicator({ className, showText = true }: OfflineIndicato
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     // Listen for sync status changes
-    const handleSyncStatusChange = (status: 'idle' | 'syncing' | 'error') => {
+    const handleSyncStatusChange = (status: "idle" | "syncing" | "error") => {
       setSyncStatus(status);
     };
 
-    offlineManager.on('sync-status-changed', handleSyncStatusChange);
+    offlineManager.on("sync-status-changed", handleSyncStatusChange);
 
     // Update pending sync count
     const updatePendingSyncCount = async () => {
@@ -37,27 +48,27 @@ export function OfflineIndicator({ className, showText = true }: OfflineIndicato
         const pendingItems = await offlineManager.getPendingSyncItems();
         setPendingSyncCount(pendingItems.length);
       } catch (error) {
-        console.error('Failed to get pending sync count:', error);
+        console.error("Failed to get pending sync count:", error);
       }
     };
 
     // Update count initially and on data changes
     updatePendingSyncCount();
-    offlineManager.on('data-updated', updatePendingSyncCount);
+    offlineManager.on("data-updated", updatePendingSyncCount);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-      offlineManager.off('sync-status-changed', handleSyncStatusChange);
-      offlineManager.off('data-updated', updatePendingSyncCount);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+      offlineManager.off("sync-status-changed", handleSyncStatusChange);
+      offlineManager.off("data-updated", updatePendingSyncCount);
     };
   }, []);
 
   const getStatusIcon = () => {
-    if (syncStatus === 'syncing') {
+    if (syncStatus === "syncing") {
       return <RefreshCw className="h-4 w-4 animate-spin" />;
     }
-    if (syncStatus === 'error') {
+    if (syncStatus === "error") {
       return <AlertCircle className="h-4 w-4 text-red-500" />;
     }
     if (isOffline) {
@@ -70,29 +81,29 @@ export function OfflineIndicator({ className, showText = true }: OfflineIndicato
   };
 
   const getStatusText = () => {
-    if (syncStatus === 'syncing') {
-      return 'Syncing...';
+    if (syncStatus === "syncing") {
+      return "Syncing...";
     }
-    if (syncStatus === 'error') {
-      return 'Sync Error';
+    if (syncStatus === "error") {
+      return "Sync Error";
     }
     if (isOffline) {
-      return pendingSyncCount > 0 
-        ? `Offline (${pendingSyncCount} pending)` 
-        : 'Offline';
+      return pendingSyncCount > 0
+        ? `Offline (${pendingSyncCount} pending)`
+        : "Offline";
     }
     if (pendingSyncCount > 0) {
       return `${pendingSyncCount} pending sync`;
     }
-    return 'All synced';
+    return "All synced";
   };
 
   const getStatusColor = () => {
-    if (syncStatus === 'error') return 'text-red-500';
-    if (isOffline) return 'text-orange-500';
-    if (syncStatus === 'syncing') return 'text-blue-500';
-    if (pendingSyncCount === 0) return 'text-green-500';
-    return 'text-blue-500';
+    if (syncStatus === "error") return "text-red-500";
+    if (isOffline) return "text-orange-500";
+    if (syncStatus === "syncing") return "text-blue-500";
+    if (pendingSyncCount === 0) return "text-green-500";
+    return "text-blue-500";
   };
 
   const handleClick = () => {
@@ -102,7 +113,7 @@ export function OfflineIndicator({ className, showText = true }: OfflineIndicato
   };
 
   return (
-    <div 
+    <div
       className={cn(
         "flex items-center gap-2 px-3 py-1 rounded-full border transition-colors",
         "cursor-pointer hover:bg-gray-50",
@@ -110,13 +121,13 @@ export function OfflineIndicator({ className, showText = true }: OfflineIndicato
         className
       )}
       onClick={handleClick}
-      title={`Click to ${!isOffline && pendingSyncCount > 0 ? 'force sync' : 'view status'}`}
+      title={`Click to ${
+        !isOffline && pendingSyncCount > 0 ? "force sync" : "view status"
+      }`}
     >
       {getStatusIcon()}
       {showText && (
-        <span className="text-sm font-medium">
-          {getStatusText()}
-        </span>
+        <span className="text-sm font-medium">{getStatusText()}</span>
       )}
     </div>
   );
