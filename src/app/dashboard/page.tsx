@@ -2,12 +2,14 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RoomDetailsSheet } from "@/components/room-details-sheet";
 import { FilterSheet } from "@/components/filter-sheet";
+import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { useRoomAssignments } from "@/hooks/use-room-assignments";
+import { toPascalCase } from "@/lib/utils";
 import {
   RoomStatus,
   RoomPriority,
@@ -73,8 +75,13 @@ const getStatusColor = (status: string) => {
 };
 
 export default function Dashboard() {
-  const { data: session, status } = useSession();
   const router = useRouter();
+  const { data: session, status } = useSession({
+    required: true,
+    onUnauthenticated() {
+      router.push("/login");
+    },
+  });
   const [selectedRoom, setSelectedRoom] = useState<RoomAssignment | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
@@ -84,7 +91,46 @@ export default function Dashboard() {
   });
 
   // Fetch room assignments using TanStack Query
-  const { data: roomAssignments = [], isLoading, error } = useRoomAssignments(filters);
+  const {
+    data: roomAssignments = [],
+    isLoading,
+    error,
+  } = useRoomAssignments();
+
+  // Deduplicate room assignments based on room ID and updated timestamp
+  const deduplicatedRooms = useMemo(() => {
+    if (!roomAssignments || roomAssignments.length === 0) return [];
+    
+    console.log('🔄 Dashboard: Deduplicating rooms, input count:', roomAssignments.length);
+    
+    const roomMap = new Map<number, RoomAssignment>(); // Fixed: Use number for room ID
+    
+    roomAssignments.forEach((room) => {
+      const existingRoom = roomMap.get(room.id); // Now using number directly
+      
+      if (!existingRoom) {
+        roomMap.set(room.id, room);
+      } else {
+        // Keep the room with the most recent updatedAt timestamp
+        const existingTime = new Date(existingRoom.updatedAt).getTime();
+        const currentTime = new Date(room.updatedAt).getTime();
+        
+        console.log(`🔄 Dashboard: Duplicate room ${room.id} found. Existing: ${existingTime}, Current: ${currentTime}`);
+        
+        if (currentTime > existingTime) {
+          console.log(`✅ Dashboard: Keeping newer version of room ${room.id}`);
+          roomMap.set(room.id, room);
+        } else {
+          console.log(`⚠️ Dashboard: Keeping existing version of room ${room.id}`);
+        }
+      }
+    });
+    
+    const result = Array.from(roomMap.values());
+    console.log('✅ Dashboard: Deduplication complete, output count:', result.length);
+    
+    return result;
+  }, [roomAssignments]);
 
   const handleRoomClick = (room: RoomAssignment) => {
     setSelectedRoom(room);
@@ -102,7 +148,10 @@ export default function Dashboard() {
 
   // Check if any filters are active
   const isFiltersActive = () => {
-    return (filters.cleanliness && filters.cleanliness.length > 0) || filters.sortBy !== "priority";
+    return (
+      (filters.cleanliness && filters.cleanliness.length > 0) ||
+      filters.sortBy !== "priority"
+    );
   };
 
   // Reset all filters to default
@@ -114,13 +163,7 @@ export default function Dashboard() {
     setFilters(defaultFilters);
   };
 
-  useEffect(() => {
-    if (status === "loading") return; // Still loading
-    if (!session) {
-      router.push("/login");
-      return;
-    }
-  }, [session, status, router]);
+  // Remove the useEffect since useSession with required: true handles authentication
 
   if (status === "loading" || isLoading) {
     return (
@@ -151,36 +194,17 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 bg-white shadow-sm border-b">
+      <div className="bg-white shadow-sm border-b sticky top-0 z-40">
         <div className="px-4 py-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Rooms to Clean Today
-            </h2>
-            <div className="flex items-center gap-2">
-              {isFiltersActive() && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleResetFilters}
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  <svg
-                    className="w-4 h-4 mr-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                  Clear
-                </Button>
-              )}
+            <div className="flex items-center gap-4">
+              <h1 className="text-xl font-semibold text-gray-900">
+                Room Assignments
+              </h1>
+              <OfflineIndicator />
+            </div>
+            
+            <div className="flex items-center gap-3">
               <div className="relative">
                 <Button
                   variant="outline"
@@ -198,7 +222,7 @@ export default function Dashboard() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"
                     />
                   </svg>
                   Filter
@@ -215,18 +239,17 @@ export default function Dashboard() {
       <div className="px-2 py-20">
         {/* Room List */}
         <div className="space-y-3">
-          {roomAssignments.length === 0 ? (
+          {deduplicatedRooms.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-500">No room assignments found</p>
             </div>
           ) : (
-            roomAssignments.map((room) => {
+            deduplicatedRooms.map((room) => {
               const statusDisplay = getStatusDisplayValue(room.status);
-              const priorityDisplay = getPriorityDisplayValue(room.priority);
-              
+
               return (
                 <Card
-                  key={room.id}
+                  key={`room-${room.id}-${new Date(room.updatedAt).getTime()}`} // More unique key generation
                   className="py-5 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
                   onClick={() => handleRoomClick(room)}
                 >
@@ -257,12 +280,14 @@ export default function Dashboard() {
                     <div className="grid grid-cols-2 gap-3 text-sm mb-2">
                       <div>
                         <div className="text-gray-600">Guest</div>
-                        <div className="font-medium">{room.guestName || "-"}</div>
+                        <div className="font-medium">
+                          {room.guestName || "-"}
+                        </div>
                       </div>
                       <div>
                         <div className="text-gray-600">Service Status</div>
                         <div className="font-medium">
-                          {room.serviceStatus || "Not set"}
+                          {toPascalCase(room.serviceStatus) || "Not set"}
                         </div>
                       </div>
                       <div>
@@ -274,7 +299,7 @@ export default function Dashboard() {
                       <div>
                         <div className="text-gray-600">Priority</div>
                         <div className="font-medium">
-                          {priorityDisplay}
+                          {toPascalCase(room.priority)}
                         </div>
                       </div>
                     </div>

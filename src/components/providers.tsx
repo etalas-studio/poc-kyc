@@ -16,7 +16,11 @@ export function Providers({ children }: ProvidersProps) {
   const [queryClient] = useState(() => createQueryClient());
 
   return (
-    <SessionProvider>
+    <SessionProvider 
+      refetchInterval={0}
+      refetchOnWindowFocus={false}
+      refetchWhenOffline={false}
+    >
       <QueryClientProvider client={queryClient}>
         {children}
         <ReactQueryDevtools initialIsOpen={false} />

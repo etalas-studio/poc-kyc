@@ -53,7 +53,7 @@ export type FilterOptionsData = z.infer<typeof FilterOptionsSchema>;
 
 // Room Assignment type based on Prisma model
 export interface RoomAssignment {
-  id: string;
+  id: number; // Fixed: Changed from string to number to match database schema
   roomNumber: string;
   status: RoomAssignmentStatus;
   priority: RoomAssignmentPriority;
