@@ -8,6 +8,8 @@ declare module "next-auth" {
       email?: string | null;
       image?: string | null;
     };
+    offlineCapable?: boolean;
+    loginTime?: number;
   }
 
   interface User {
@@ -21,5 +23,9 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
+    email?: string;
+    name?: string;
+    offlineCapable?: boolean;
+    loginTime?: number;
   }
 }

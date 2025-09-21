@@ -33,9 +33,7 @@ export function RoomDetailsSheet({
   const [serviceStatus, setServiceStatus] = useState<ServiceStatus>(
     room?.serviceStatus || ServiceStatus.PENDING
   );
-  const [housekeepingNote, setHousekeepingNote] = useState(
-    room?.notes || ""
-  );
+  const [housekeepingNote, setHousekeepingNote] = useState(room?.notes || "");
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -45,9 +43,9 @@ export function RoomDetailsSheet({
     const initializeOfflineServices = async () => {
       try {
         await offlineManager.init();
-        console.log('Offline manager initialized in RoomDetailsSheet');
+        console.log("Offline manager initialized in RoomDetailsSheet");
       } catch (error) {
-        console.error('Failed to initialize offline services:', error);
+        console.error("Failed to initialize offline services:", error);
       }
     };
 
@@ -61,20 +59,20 @@ export function RoomDetailsSheet({
     };
     const handleOffline = () => setIsOffline(true);
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     // Listen for sync status changes
-    const handleSyncStatusChange = (status: 'idle' | 'syncing' | 'error') => {
-      setIsSyncing(status === 'syncing');
+    const handleSyncStatusChange = (status: "idle" | "syncing" | "error") => {
+      setIsSyncing(status === "syncing");
     };
 
-    offlineManager.on('sync-status-changed', handleSyncStatusChange);
+    offlineManager.on("sync-status-changed", handleSyncStatusChange);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-      offlineManager.off('sync-status-changed', handleSyncStatusChange);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+      offlineManager.off("sync-status-changed", handleSyncStatusChange);
     };
   }, []);
 
@@ -108,7 +106,7 @@ export function RoomDetailsSheet({
       // Logic: Jika serviceStatus = COMPLETE, maka status kamar jadi CLEAN
       // Selain itu, status kamar tetap DIRTY (atau tidak berubah)
       if (serviceStatus === ServiceStatus.COMPLETE) {
-        updateData.status = 'CLEAN';
+        updateData.status = "CLEAN";
       }
 
       // OPTIMISTIC UPDATE: Update UI immediately before actual update
@@ -116,7 +114,8 @@ export function RoomDetailsSheet({
         ...room,
         serviceStatus,
         notes: housekeepingNote,
-        status: serviceStatus === ServiceStatus.COMPLETE ? 'CLEAN' : room.status,
+        status:
+          serviceStatus === ServiceStatus.COMPLETE ? "CLEAN" : room.status,
         updatedAt: new Date().toISOString(),
       };
 
@@ -124,10 +123,11 @@ export function RoomDetailsSheet({
       // Let the offline manager and event system handle the updates
 
       // Show immediate feedback
-      const immediateMessage = serviceStatus === ServiceStatus.COMPLETE 
-        ? `Room ${room.roomNumber} marked as CLEAN and COMPLETE!`
-        : `Room ${room.roomNumber} service status updated!`;
-      
+      const immediateMessage =
+        serviceStatus === ServiceStatus.COMPLETE
+          ? `Room ${room.roomNumber} marked as CLEAN and COMPLETE!`
+          : `Room ${room.roomNumber} service status updated!`;
+
       toast.success(immediateMessage);
 
       // Close the sheet immediately for better UX
@@ -139,9 +139,12 @@ export function RoomDetailsSheet({
 
         // Show sync status message
         if (isOffline) {
-          toast.info(`Changes saved offline. Will sync when connection is restored.`, {
-            autoClose: 3000,
-          });
+          toast.info(
+            `Changes saved offline. Will sync when connection is restored.`,
+            {
+              autoClose: 3000,
+            }
+          );
         } else {
           // Trigger background sync for immediate server update
           backgroundSyncService.forcSync();
@@ -149,19 +152,21 @@ export function RoomDetailsSheet({
             autoClose: 2000,
           });
         }
-
       } catch (updateError) {
-        console.error('Failed to update room in background:', updateError);
-        
+        console.error("Failed to update room in background:", updateError);
+
         // Revert optimistic update on failure
         queryClient.invalidateQueries({ queryKey: roomAssignmentKeys.all });
-        
-        toast.error(`Failed to save changes for room ${room.roomNumber}. Please try again.`);
-      }
 
+        toast.error(
+          `Failed to save changes for room ${room.roomNumber}. Please try again.`
+        );
+      }
     } catch (error) {
-      console.error('Failed to perform optimistic update:', error);
-      toast.error(`Failed to update room ${room.roomNumber}. Please try again.`);
+      console.error("Failed to perform optimistic update:", error);
+      toast.error(
+        `Failed to update room ${room.roomNumber}. Please try again.`
+      );
     } finally {
       setIsUpdating(false);
     }
@@ -321,33 +326,35 @@ export function RoomDetailsSheet({
         </div>
 
         {/* Submit Button - Sticky at bottom with sync indicators */}
-        <div className="sticky bottom-0 bg-white border-t p-4 space-y-2">
+        <div className="sticky bottom-0 border-t p-4 space-y-2">
           {/* Sync Status Indicator */}
-          {(isOffline || isSyncing) && (
-            <div className="flex items-center justify-center space-x-2 text-sm">
-              {isOffline && (
-                <div className="flex items-center space-x-1 text-orange-600">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                  <span>Offline - Changes will sync when online</span>
-                </div>
-              )}
-              {isSyncing && (
-                <div className="flex items-center space-x-1 text-blue-600">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  <span>Syncing changes...</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          <Button
-            onClick={handleSubmit}
-            className="w-full"
-            size="lg"
-            disabled={isSyncing}
-          >
-            {isSyncing ? "Syncing..." : "Submit Changes"}
-          </Button>
+          <div className="mb-5">
+            {" "}
+            {(isOffline || isSyncing) && (
+              <div className="flex items-center justify-center space-x-2 text-sm">
+                {isOffline && (
+                  <div className="flex items-center space-x-1 text-orange-600">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    <span>Offline - Changes will sync when online</span>
+                  </div>
+                )}
+                {isSyncing && (
+                  <div className="flex items-center space-x-1 text-blue-600">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    <span>Syncing changes...</span>
+                  </div>
+                )}
+              </div>
+            )}
+            <Button
+              onClick={handleSubmit}
+              className="w-full "
+              size="lg"
+              disabled={isSyncing}
+            >
+              {isSyncing ? "Syncing..." : "Submit Changes"}
+            </Button>
+          </div>
         </div>
       </SheetContent>
     </Sheet>

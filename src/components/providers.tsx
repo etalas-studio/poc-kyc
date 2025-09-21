@@ -1,9 +1,9 @@
 "use client";
 
+import React, { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { SessionProvider } from "next-auth/react";
-import { useState } from "react";
 import { createQueryClient } from "@/lib/query-client";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -12,7 +12,7 @@ interface ProvidersProps {
   children: React.ReactNode;
 }
 
-export function Providers({ children }: ProvidersProps) {
+export default function Providers({ children }: ProvidersProps) {
   const [queryClient] = useState(() => createQueryClient());
 
   return (

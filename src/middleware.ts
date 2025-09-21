@@ -9,7 +9,9 @@ export default withAuth(
       authorized: ({ token, req }) => {
         // Protect dashboard routes
         if (req.nextUrl.pathname.startsWith("/dashboard")) {
-          return !!token;
+          // Allow access if token exists and has offline capability
+          // This prevents logout when offline or database is unavailable
+          return !!token && (token.offlineCapable === true || !!token.id);
         }
         return true;
       },

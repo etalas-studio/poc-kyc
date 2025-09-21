@@ -11,7 +11,8 @@ const loginSchema = z.object({
 });
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  // Removed PrismaAdapter to avoid database dependency during offline mode
+  // adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -50,6 +51,10 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: "jwt",
+    maxAge: 7 * 24 * 60 * 60, // 7 days - Extended for offline capability
+  },
+  jwt: {
+    maxAge: 7 * 24 * 60 * 60, // 7 days - Extended JWT lifetime
   },
   pages: {
     signIn: "/login",
@@ -58,12 +63,22 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.email = user.email || undefined;
+        token.name = user.name || undefined;
+        // Add offline capability flag
+        token.offlineCapable = true;
+        token.loginTime = Date.now();
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
+        session.user.email = token.email as string;
+        session.user.name = token.name as string;
+        // Pass offline capability to session
+        (session as any).offlineCapable = token.offlineCapable;
+        (session as any).loginTime = token.loginTime;
       }
       return session;
     },

@@ -10,6 +10,7 @@ import { FilterSheet } from "@/components/filter-sheet";
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { useRoomAssignments } from "@/hooks/use-room-assignments";
 import { toPascalCase } from "@/lib/utils";
+import { offlineManager } from "@/lib/offline/offline-manager";
 import {
   RoomStatus,
   RoomPriority,
@@ -89,9 +90,43 @@ export default function Dashboard() {
     cleanliness: [],
     sortBy: "priority",
   });
+  const [dirtyRoomIds, setDirtyRoomIds] = useState<Set<number>>(new Set());
 
   // Fetch room assignments using TanStack Query
   const { data: roomAssignments = [], isLoading, error } = useRoomAssignments();
+
+  // Track dirty rooms for unsynced indicators
+  useEffect(() => {
+    const updateDirtyRooms = async () => {
+      try {
+        await offlineManager.init();
+        const dirtyRooms = await offlineManager.getDirtyRooms();
+        const dirtyIds = new Set(dirtyRooms.map(room => room.id));
+        setDirtyRoomIds(dirtyIds);
+      } catch (error) {
+        console.error('Failed to get dirty rooms:', error);
+      }
+    };
+
+    updateDirtyRooms();
+
+    // Listen for room updates to refresh dirty status
+    const handleRoomUpdated = () => {
+      updateDirtyRooms();
+    };
+
+    offlineManager.on('room-updated', handleRoomUpdated);
+    offlineManager.on('sync-status-changed', (status) => {
+      if (status === 'idle') {
+        updateDirtyRooms(); // Refresh after sync completes
+      }
+    });
+
+    return () => {
+      offlineManager.off('room-updated', handleRoomUpdated);
+      offlineManager.off('sync-status-changed', handleRoomUpdated);
+    };
+  }, []);
 
   // Deduplicate room assignments based on room ID and updated timestamp
   const deduplicatedRooms = useMemo(() => {
@@ -240,7 +275,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="px-2 py-20">
+      <div className="px-2 pt-5 pb-10">
         {/* Room List */}
         <div className="space-y-3">
           {deduplicatedRooms.length === 0 ? (
@@ -250,6 +285,7 @@ export default function Dashboard() {
           ) : (
             deduplicatedRooms.map((room) => {
               const statusDisplay = getStatusDisplayValue(room.status);
+              const isUnsynced = dirtyRoomIds.has(room.id);
 
               return (
                 <Card
@@ -268,6 +304,12 @@ export default function Dashboard() {
                         <div className="text-lg font-semibold tracking-tight text-gray-900">
                           Room {room.roomNumber}
                         </div>
+                        {isUnsynced && (
+                          <div className="flex items-center gap-1">
+                            <div className="h-2 w-2 bg-orange-500 rounded-full"></div>
+                            <span className="text-xs text-orange-600 font-medium">Pending sync</span>
+                          </div>
+                        )}
                       </div>
                       <div className="flex gap-2">
                         <div
